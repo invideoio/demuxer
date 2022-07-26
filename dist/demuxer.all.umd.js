@@ -1,14 +1,15 @@
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
-    (global = global || self, factory(global.Demuxer = {}));
-}(this, (function (exports) { 'use strict';
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.Demuxer = {}));
+})(this, (function (exports) { 'use strict';
 
     /**
      * @file= events.js, created at Monday, 23rd December 2019 3=47=23 pm
      * @copyright Copyright (c) 2020
      * @author gem <gems.xu@gmail.com>
      */
+    exports.Events = void 0;
     (function (Events) {
         Events["ERROR"] = "ERROR";
         Events["INFO"] = "INFO";
@@ -1342,7 +1343,7 @@
     //     service_name: string;
     //     service_provider: string;
     // }
-    class PSI$1 {
+    class PSI {
         constructor() {
             // this.metadata = new Metadata();
             this.pat_table = [];
@@ -2722,6 +2723,7 @@
         primary_pic_type;
         pts;
         dts;
+        pesPayload;
         constructor(buffer) {
             super();
             this.forbidden_zero_bit = buffer[0] >> 7;
@@ -2767,10 +2769,11 @@
         lastState = null;
         lastNALu = null;
         lastNALuState = null;
-        spitNalu_(bytes, pts, dts) {
+        spitNalu_(bytes, pts, dts, pesPayload) {
             let nalu = new NALU(bytes);
             nalu.pts = pts;
             nalu.dts = dts;
+            nalu.pesPayload = pesPayload;
             this.lastNALu = nalu;
             this.emit('nalu', nalu);
         }
@@ -2816,7 +2819,7 @@
                     else if (value === 1) {
                         if (lastNALuOffset >= 0) {
                             this.lastNALuState = state;
-                            this.spitNalu_(payload.subarray(lastNALuOffset, i - 1 - state), pts, dts);
+                            this.spitNalu_(payload.subarray(lastNALuOffset, i - 1 - state), pts, dts, payload);
                         }
                         else {
                             // naluOffset is undefined => this is the first start code found in this PES packet
@@ -2862,7 +2865,7 @@
                 } while (i < len);
                 if (lastNALuOffset >= 0 && state >= 0) {
                     this.lastNALuState = state;
-                    this.spitNalu_(payload.subarray(lastNALuOffset, len), pts, dts);
+                    this.spitNalu_(payload.subarray(lastNALuOffset, len), pts, dts, payload);
                 }
                 this.lastState = state;
             }
@@ -2879,7 +2882,7 @@
                     if (endPos > byteLength) {
                         endPos = byteLength;
                     }
-                    this.spitNalu_(payload.subarray(startPos, endPos), pts, dts);
+                    this.spitNalu_(payload.subarray(startPos, endPos), pts, dts, payload);
                     startPos = endPos;
                 } while (startPos < byteLength);
             }
@@ -3469,7 +3472,7 @@
         complexStream_;
         constructor(options = {}) {
             super(options);
-            this.psi_ = new PSI$1();
+            this.psi_ = new PSI();
             this.pesStream_ = new PesStream(this.ctx_, this.psi_);
             this.elementaryStream_ = new ElementaryStream(this.ctx_, this.psi_, options);
             this.complexStream_ = new M2TSComplexStream(this.ctx_, this.psi_);
@@ -3622,7 +3625,7 @@
             };
         },
         esds: function (data) {
-            let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+            new DataView(data.buffer, data.byteOffset, data.byteLength);
             return {
                 version: data[0],
                 flags: new Uint8Array(data.subarray(1, 4)),
@@ -5020,4 +5023,4 @@
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-})));
+}));

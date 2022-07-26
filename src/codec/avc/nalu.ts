@@ -43,6 +43,7 @@ export default class NALU extends DataViewReader {
     primary_pic_type: number;
     pts?: number;
     dts?: number;
+    pesPayload: Uint8Array;
 
     constructor(buffer: Uint8Array) {
         super();

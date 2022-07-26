@@ -36,11 +36,12 @@ export class AVCCodec extends EventEmitter {
     private lastNALu: NALU = null;
     private lastNALuState: ParsePesState = null;
 
-    private spitNalu_(bytes: Uint8Array, pts: number, dts: number) {
+    private spitNalu_(bytes: Uint8Array, pts: number, dts: number, pesPayload: Uint8Array) {
         let nalu: NALU = new NALU(bytes);
 
         nalu.pts = pts;
         nalu.dts = dts;
+        nalu.pesPayload = pesPayload;
 
         this.lastNALu = nalu;
         this.emit('nalu', nalu);
@@ -95,7 +96,7 @@ export class AVCCodec extends EventEmitter {
                 } else if (value === 1) {
                     if (lastNALuOffset >= 0) {
                         this.lastNALuState = state;
-                        this.spitNalu_(payload.subarray(lastNALuOffset, i - 1 - state), pts, dts);
+                        this.spitNalu_(payload.subarray(lastNALuOffset, i - 1 - state), pts, dts, payload);
                     } else {
                         // naluOffset is undefined => this is the first start code found in this PES packet
                         // first check if start code delimiter is overlapping between 2 PES packets,
@@ -147,7 +148,7 @@ export class AVCCodec extends EventEmitter {
 
             if (lastNALuOffset >= 0 && state >= 0) {
                 this.lastNALuState = state;
-                this.spitNalu_(payload.subarray(lastNALuOffset, len), pts, dts);
+                this.spitNalu_(payload.subarray(lastNALuOffset, len), pts, dts, payload);
             }
 
             this.lastState = state;
@@ -168,7 +169,7 @@ export class AVCCodec extends EventEmitter {
                     endPos = byteLength;
                 }
 
-                this.spitNalu_(payload.subarray(startPos, endPos), pts, dts);
+                this.spitNalu_(payload.subarray(startPos, endPos), pts, dts, payload);
                 startPos = endPos;
             } while (startPos < byteLength);
         }

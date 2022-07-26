@@ -2277,6 +2277,7 @@ class NALU extends DataViewReader {
     primary_pic_type;
     pts;
     dts;
+    pesPayload;
     constructor(buffer) {
         super();
         this.forbidden_zero_bit = buffer[0] >> 7;
@@ -2322,10 +2323,11 @@ class AVCCodec extends EventEmitter {
     lastState = null;
     lastNALu = null;
     lastNALuState = null;
-    spitNalu_(bytes, pts, dts) {
+    spitNalu_(bytes, pts, dts, pesPayload) {
         let nalu = new NALU(bytes);
         nalu.pts = pts;
         nalu.dts = dts;
+        nalu.pesPayload = pesPayload;
         this.lastNALu = nalu;
         this.emit('nalu', nalu);
     }
@@ -2371,7 +2373,7 @@ class AVCCodec extends EventEmitter {
                 else if (value === 1) {
                     if (lastNALuOffset >= 0) {
                         this.lastNALuState = state;
-                        this.spitNalu_(payload.subarray(lastNALuOffset, i - 1 - state), pts, dts);
+                        this.spitNalu_(payload.subarray(lastNALuOffset, i - 1 - state), pts, dts, payload);
                     }
                     else {
                         // naluOffset is undefined => this is the first start code found in this PES packet
@@ -2417,7 +2419,7 @@ class AVCCodec extends EventEmitter {
             } while (i < len);
             if (lastNALuOffset >= 0 && state >= 0) {
                 this.lastNALuState = state;
-                this.spitNalu_(payload.subarray(lastNALuOffset, len), pts, dts);
+                this.spitNalu_(payload.subarray(lastNALuOffset, len), pts, dts, payload);
             }
             this.lastState = state;
         }
@@ -2434,7 +2436,7 @@ class AVCCodec extends EventEmitter {
                 if (endPos > byteLength) {
                     endPos = byteLength;
                 }
-                this.spitNalu_(payload.subarray(startPos, endPos), pts, dts);
+                this.spitNalu_(payload.subarray(startPos, endPos), pts, dts, payload);
                 startPos = endPos;
             } while (startPos < byteLength);
         }
