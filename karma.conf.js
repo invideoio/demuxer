@@ -12,7 +12,10 @@ module.exports = function (config) {
         frameworks: ['jasmine'],
 
         // list of files / patterns to load in the browser
-        files: ['test/**/*-unit.js'],
+        files: [
+            'test/**/*-unit.js',
+            { pattern: 'test/m2t/fixtures/*.ts', watched: true, served: true, included: false }
+        ],
 
         // list of files / patterns to exclude
         exclude: [],

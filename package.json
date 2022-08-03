@@ -72,5 +72,8 @@
     "url": "https://github.com/goldvideo/demuxer/issues"
   },
   "homepage": "https://github.com/goldvideo/demuxer#readme",
-  "sideEffects": false
+  "sideEffects": false,
+  "dependencies": {
+    "webpack": "^5.74.0"
+  }
 }

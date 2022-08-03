@@ -2997,6 +2997,7 @@
             if (this.gop.length > 0) {
                 this._pushGopIntoGroup();
             }
+            this._publishGops();
         }
         reset() {
             this.codec.reset();
@@ -3078,8 +3079,10 @@
             this.gops.firstDTS = firstFrame.dts;
             this.gops.firstPTS = firstFrame.pts;
             this.gops.push(this.gop);
-            this.emit('data', this.gops);
             this._newGop();
+        }
+        _publishGops() {
+            this.emit('data', this.gops);
             this._newGops();
             this.emit('done');
         }
